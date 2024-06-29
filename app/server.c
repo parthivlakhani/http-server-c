@@ -49,13 +49,28 @@ int main() {
 		printf("Listen failed: %s \n", strerror(errno));
 		return 1;
 	}
-	
-	printf("Waiting for a client to connect...\n");
-	client_addr_len = sizeof(client_addr);
-	
-	int fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
-	printf("Client connected\n");
+	while(1){
+		printf("Waiting for a client to connect...\n");
+		client_addr_len = sizeof(client_addr);
+		
+		int fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
+		printf("Client connected\n");
 
+		if (!fork())
+		{
+			close(server_fd);
+			handle_connection(fd);
+			close(fd);
+			exit(0);
+		}
+		close(fd);
+	}
+	
+
+	return 0;
+}
+
+void handle_connection(int fd){
 	char req_buffer[1024];
 	if (read(fd, req_buffer, 1024) < 0) {
     	printf("Read failed: %s \n", strerror(errno));
@@ -66,9 +81,6 @@ int main() {
   	}
 	char *reqpath = strtok(req_buffer, " ");
 	reqpath = strtok(NULL, " ");
-
-
-	// sscanf(req_buffer, "%s %s %s", method,path,protocol);
 
 	if(strcmp(reqpath, "/")==0){
 		char *response = "HTTP/1.1 200 OK\r\n\r\n";
@@ -101,7 +113,5 @@ int main() {
 		char response[] = "HTTP/1.1 404 Not Found\r\n\r\n";
 		send(fd,response, strlen(response),0);
 	}
-	close(server_fd);
-
-	return 0;
+	return ;
 }
