@@ -7,6 +7,8 @@
 #include <errno.h>
 #include <unistd.h>
 
+void handle_connection(int fd);
+
 int main() {
 	// Disable output buffering
 	setbuf(stdout, NULL);
@@ -75,7 +77,7 @@ void handle_connection(int fd){
 	
 	if (recv(fd, req_buffer, 1024, 0) < 0) {
     	printf("Read failed: %s \n", strerror(errno));
-    	return 1;
+    	return;
   	}	
 	else{
     	printf("Request from client: %s\n", req_buffer);
@@ -95,7 +97,6 @@ void handle_connection(int fd){
 		reqpath = strtok(reqpath, "/");
 		reqpath = strtok(NULL,"");
 		int len=strlen(reqpath);
-		// char *endpath = path+6;
 		char response[1024]; 
 		sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len,reqpath);
 		send(fd,response, strlen(response),0);
