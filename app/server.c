@@ -64,26 +64,43 @@ int main() {
 	else{
     	printf("Request from client: %s\n", req_buffer);
   	}
-	char method[10], path[1024], protocol[10];
-	sscanf(req_buffer, "%s %s %s", method,path,protocol);
+	char *reqpath = strtok(req_buffer, " ");
+	reqpath = strtok(NULL, " ");
 
-	if(strncmp(path,"/echo/", 6)==0){
-		int len=strlen(path)-6;
-		char *endpath = path+6;
+
+	// sscanf(req_buffer, "%s %s %s", method,path,protocol);
+
+	if(strcmp(reqpath, "/")==0){
+		char *response = "HTTP/1.1 200 OK\r\n\r\n";
+		send(fd, response, strlen(response),0);
+	}
+	else if(strncmp(reqpath,"/echo/", 6)==0){
+
+		reqpath = strtok(reqpath, "/");
+		reqpath = strtok(NULL,"");
+		int len=strlen(reqpath);
+		// char *endpath = path+6;
 		char response[1024]; 
-		sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: " 
-							"text/plain\r\nContent-Length: %d\r\n\r\n%s", len,endpath);
+		sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len,reqpath);
 		send(fd,response, strlen(response),0);
 	}
-	else if(strcmp(path, "/")==0){
-		char response[] = "HTTP/1.1 200 OK\r\n\r\n";
-		send(fd,response, strlen(response),0);
+	else if(strcmp(reqpath,"/user-agent")==0){
+		reqpath = strtok(NULL, "\r\n");
+		reqpath = strtok(NULL, "\r\n");
+		reqpath = strtok(NULL, "\r\n");
+
+		char *body = strtok(reqpath, " ");
+		body = strtok(NULL, " ");
+		int len = strlen(body);
+
+		char response[1024];
+		sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len,body);
+		send(fd, response, strlen(response),0);
 	}
 	else{
 		char response[] = "HTTP/1.1 404 Not Found\r\n\r\n";
 		send(fd,response, strlen(response),0);
 	}
-	
 	close(server_fd);
 
 	return 0;
