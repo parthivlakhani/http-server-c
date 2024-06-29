@@ -116,36 +116,51 @@ void handle_connection(int fd){
 	}
 	else if(strncmp(reqpath, "/files/", 7)==0 && strcmp(method, "GET")==0){
 		
+		// Parse the file path
 		char *filename = strtok(reqpath, "/");
 		filename = strtok(NULL, "");
 
+		// Open the file and check if the file exists
 		FILE *fp = fopen(filename, "rb");
-		if(!fp){
-			//file not found
-			char *res = "HTTP/1.1 404 Not Found\r\n\r\n";
+		if (!fp)
+		{
+			// If it doesn't exist, return 404
+			printf("File not found");
+			char *res = "HTTP/1.1 404 Not Found\r\n\r\n"; // HTTP response
 			send(fd, res, strlen(res), 0);
 		}
-		else{
-			printf("%s", filename);
+		else
+		{
+			printf("Opening file %s\n", filename);
 		}
 
-		if(fseek(fp,0,SEEK_END)<0){
-			printf("Error in reading file\n");
+		// Read in binary and set the cursor at the end
+		if (fseek(fp, 0, SEEK_END) < 0)
+		{
+			printf("Error reading the document\n");
 		}
 
-		long data_size = ftell(fp);
+		// Get the size of the file
+		size_t data_size = ftell(fp);
 
+		// Rewind the cursor back
 		rewind(fp);
 
+		// Allocate enough memory for the contents
 		void *data = malloc(data_size);
 
-		if(fread(data, 1, data_size, fp)!= data_size){
-			printf("Error in reading file\n");
+		// Fill in the content
+		if (fread(data, 1, data_size, fp) != data_size)
+		{
+			printf("Error reading the document\n");
 		}
+
 		fclose(fp);
 
+		// Return contents
 		char response[1024];
 		sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: %ld\r\n\r\n%s", data_size, (char *)data);
+		printf("Sending response: %s\n", response);
 		send(fd, response, strlen(response), 0);
 	}
 	else if(strncmp(reqpath, "/files/", 7)==0 && strcmp(method, "POST")==0){
@@ -212,5 +227,5 @@ void handle_connection(int fd){
 		char response[] = "HTTP/1.1 404 Not Found\r\n\r\n";
 		send(fd,response, strlen(response),0);
 	}
-	return ;
+	return;
 }
