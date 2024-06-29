@@ -72,6 +72,7 @@ int main() {
 
 void handle_connection(int fd){
 	char req_buffer[1024];
+	
 	if (read(fd, req_buffer, 1024) < 0) {
     	printf("Read failed: %s \n", strerror(errno));
     	return 1;
@@ -79,6 +80,9 @@ void handle_connection(int fd){
 	else{
     	printf("Request from client: %s\n", req_buffer);
   	}
+	char *method = strdup(req_buffer);
+	char *content = strdup(req_buffer);
+	method = strtok(method, " ");
 	char *reqpath = strtok(req_buffer, " ");
 	reqpath = strtok(NULL, " ");
 
@@ -108,6 +112,40 @@ void handle_connection(int fd){
 		char response[1024];
 		sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len,body);
 		send(fd, response, strlen(response),0);
+	}
+	else if(strncmp(reqpath, "/files/", 7)==0 && strcmp(method, "GET")==0){
+		
+		char *filename = strtok(reqpath, "/");
+		filename = strtok(NULL, "");
+
+		FILE *fp = fopen(filename, "rb");
+		if(!fp){
+			//file not found
+			char *res = "HTTP/1.1 404 Not Found\r\n\r\n";
+			send(fd, res, strlen(res), 0);
+		}
+		else{
+			printf("%s", filename);
+		}
+
+		if(fseek(fp,0,SEEK_END)<0){
+			printf("Error in reading file\n");
+		}
+
+		long data_size = ftell(fp);
+
+		rewind(fp);
+
+		void *data = malloc(data_size);
+
+		if(fread(data, 1, data_size, fp)!= data_size){
+			printf("Error in reading file\n");
+		}
+		fclose(fp);
+
+		char response[1024];
+		sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: %ld\r\n\r\n%s", data_size, (char *)data);
+		send(fd, response, strlen(response), 0);
 	}
 	else{
 		char response[] = "HTTP/1.1 404 Not Found\r\n\r\n";
