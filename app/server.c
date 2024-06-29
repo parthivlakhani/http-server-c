@@ -64,6 +64,9 @@ int main() {
 	else{
     	printf("Request from client: %s\n", req_buffer);
   	}
+	int buff[1024];
+	read(fd, buff, sizeof(buff));
+	strtok(buff, " ");
 	char *path = strtok(0, " ");
 	if(strncmp(path,"/echo/", 6)==0){
 		int len=strlen(path)-6;
