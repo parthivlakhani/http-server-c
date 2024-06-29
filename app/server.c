@@ -147,6 +147,66 @@ void handle_connection(int fd){
 		sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: %ld\r\n\r\n%s", data_size, (char *)data);
 		send(fd, response, strlen(response), 0);
 	}
+	else if(strncmp(reqpath, "/files/", 7)==0 && strcmp(method, "POST")==0){
+		method = strtok(NULL, "\r\n"); // HTTP 1.1
+		method = strtok(NULL, "\r\n"); // Content-Type
+		method = strtok(NULL, "\r\n"); // User-Agent
+		method = strtok(NULL, "\r\n"); // Accept: */*
+		method = strtok(NULL, "\r\n"); // Content-Length: X
+
+		char *contentLengthStr = strtok(method, " ");
+		contentLengthStr = strtok(NULL, " ");
+
+		int contentLength = atoi(contentLengthStr);
+
+		// Parse the file path
+		char *filename = strtok(reqpath, "/");
+		filename = strtok(NULL, "");
+
+		// Get the contents
+		content = strtok(content, "\r\n"); // Content: POST /files/dumpty_yikes_dooby_237 HTTP/1.1
+		printf("\n\n\nContent: %s\n\n\n", content);
+		content = strtok(NULL, "\r\n"); // Host: localhost:4221
+		content = strtok(NULL, "\r\n"); // User-Agent: curl/7.81.0
+		content = strtok(NULL, "\r\n"); // Accept: */*
+		content = strtok(NULL, "\r\n"); // Content-Length: 51
+		printf("\n\n\nContent: %s\n\n\n", content);
+		content = strtok(NULL, "\r\n"); // Content-Type: application/x-www-form-urlencoded
+		printf("\n\n\nContent: %s\n\n\n", content);
+		content = strtok(NULL, "\r\n"); // Content-Type: application/x-www-form-urlencoded
+		printf("\n\n\nContent: %s\n\n\n", content);
+
+		printf("\n---\nCreate a file %s with content length: %d\n\n %s\n---\n", filename, contentLength, content);
+
+		// Open the file in write binary mode
+		FILE *fp = fopen(filename, "wb");
+		if (!fp)
+		{
+			// If the file could not be created/opened
+			printf("File could not be opened");
+			char *res = "HTTP/1.1 404 Not Found\r\n\r\n"; // HTTP response
+			send(fd, res, strlen(res), 0);
+		}
+		else
+		{
+			printf("Opening file %s\n", filename);
+		}
+
+		// Write the contents
+		if (fwrite(content, 1, contentLength, fp) != contentLength)
+		{
+			printf("Error writing the data");
+		}
+
+		fclose(fp);
+
+		// Return contents
+		// Return contents
+		char response[1024];
+		sprintf(response, "HTTP/1.1 201 Created\r\nContent-Type: application/octet-stream\r\nContent-Length: %d\r\n\r\n%s", contentLength, content);
+		printf("Sending response: %s\n", response);
+		send(fd, response, strlen(response), 0);
+	}
 	else{
 		char response[] = "HTTP/1.1 404 Not Found\r\n\r\n";
 		send(fd,response, strlen(response),0);
