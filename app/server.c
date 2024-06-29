@@ -67,7 +67,7 @@ int main() {
 	char *path = strtok(req_buffer, " ");
 	path = strtok(NULL, " ");
 	
-	char *response = (strcmp(path, "/")==0) ? "HTTP/1.1 200 OK\r\n\r\n" : "HTTP/1.1 404 not Found\r\n\r\n";
+	char *response = (strcmp(path, "/")==0) ? "HTTP/1.1 200 OK\r\n\r\n" : "HTTP/1.1 404 Not Found\r\n\r\n";
 	int bytes_sent = send(fd,response, strlen(response),0);
 	
 	close(server_fd);
