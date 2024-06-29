@@ -64,11 +64,22 @@ int main() {
 	else{
     	printf("Request from client: %s\n", req_buffer);
   	}
-	char *path = strtok(req_buffer, " ");
-	path = strtok(NULL, " ");
-	
-	char *response = (strcmp(path, "/")==0) ? "HTTP/1.1 200 OK\r\n\r\n" : "HTTP/1.1 404 Not Found\r\n\r\n";
-	int bytes_sent = send(fd,response, strlen(response),0);
+	char *path = strtok(0, " ");
+	if(strncmp(path,"/echo/", 6)==0){
+		int len=strlen(path)-6;
+		char *endpath = path+6;
+		char response[1024]; 
+		sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len,endpath);
+		send(fd,response, strlen(response),0);
+	}
+	else if(strcmp(path, "/")==0){
+		char response[] = "HTTP/1.1 200 OK\r\n\r\n";
+		send(fd,response, strlen(response),0);
+	}
+	else{
+		char response[] = "HTTP/1.1 404 Not Found\r\n\r\n";
+		send(fd,response, strlen(response),0);
+	}
 	
 	close(server_fd);
 
