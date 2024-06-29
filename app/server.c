@@ -55,8 +55,20 @@ int main() {
 	
 	int fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
 	printf("Client connected\n");
-	char *reply = "HTTP/1.1 200 OK\r\n\r\n";
-	int bytes_sent = send(fd,reply, strlen(reply),0);
+
+	char req_buffer[1024];
+	if (read(fd, req_buffer, 1024) < 0) {
+    	printf("Read failed: %s \n", strerror(errno));
+    	return 1;
+  	}	
+	else{
+    	printf("Request from client: %s\n", req_buffer);
+  	}
+	char *path = strtok(req_buffer, " ");
+	path = strtok(NULL, " ");
+	
+	char *response = (strcmp(path, "/")==0) ? "HTTP/1.1 200 OK\r\n\r\n" : "HTTP/1.1 404 not Found\r\n\r\n";
+	int bytes_sent = send(fd,response, strlen(response),0);
 	
 	close(server_fd);
 
