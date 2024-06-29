@@ -73,7 +73,7 @@ int main() {
 void handle_connection(int fd){
 	char req_buffer[1024];
 	
-	if (recb(fd, req_buffer, 1024, 0) < 0) {
+	if (recv(fd, req_buffer, 1024, 0) < 0) {
     	printf("Read failed: %s \n", strerror(errno));
     	return 1;
   	}	
