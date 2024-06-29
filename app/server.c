@@ -69,7 +69,8 @@ int main() {
 		int len=strlen(path)-6;
 		char *endpath = path+6;
 		char response[1024]; 
-		sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len,endpath);
+		sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: " 
+							"text/plain\r\nContent-Length: %d\r\n\r\n%s", len,endpath);
 		send(fd,response, strlen(response),0);
 	}
 	else if(strcmp(path, "/")==0){
