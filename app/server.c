@@ -209,70 +209,58 @@ void handle_connection(int fd){
 		send(fd, response, strlen(response), 0);
 	}
 	else if (strncmp(reqpath, "/files/", 7) == 0 && strcmp(method, "POST") == 0)
-	{
-		// reqpath -> /files/example.txt
-		char *filename = strtok(reqpath, "/"); // filename -> files/example.txt
-		filename = strtok(NULL, ""); // filename -> example.txt
+{
+    char *filename = strtok(reqpath, "/");
+    filename = strtok(NULL, "");
 
-		
-		// strstr() - used for string matching and returns a pointer point to the first character of the found s2 in s1 
-		// Find the start of the file content
-		char *file_content = strstr(content, "\r\n\r\n"); 
-		if (file_content == NULL) {
-			printf("Could not find file content\n");
-			char *res = "HTTP/1.1 400 Bad Request\r\n\r\n";
-			send(fd, res, strlen(res), 0);
-			return;
-		}
-		file_content += 4; // Skip the first \r\n\r\n
+    // Find Content-Length header
+    char *content_length_str = strstr(content, "Content-Length: ");
+    if (content_length_str == NULL) {
+        printf("Could not find Content-Length header\n");
+        char *res = "HTTP/1.1 400 Bad Request\r\n\r\n";
+        send(fd, res, strlen(res), 0);
+        return;
+    }
+    content_length_str += 16; // Skip "Content-Length: "
+    int content_length = atoi(content_length_str);
 
-		// Find the start of the actual content (after headers)
-		file_content = strstr(file_content, "\r\n\r\n");
-		if (file_content == NULL) {
-			printf("Could not find start of file content\n");
-			char *res = "HTTP/1.1 400 Bad Request\r\n\r\n";
-			send(fd, res, strlen(res), 0);
-			return;
-		}
-		file_content += 4; // Skip the second \r\n\r\n
+    // Find the start of the request body
+    char *body = strstr(content, "\r\n\r\n");
+    if (body == NULL) {
+        printf("Could not find request body\n");
+        char *res = "HTTP/1.1 400 Bad Request\r\n\r\n";
+        send(fd, res, strlen(res), 0);
+        return;
+    }
+    body += 4; // Skip "\r\n\r\n"
 
-		// Find the end of the file content
-		char *end_boundary = strstr(file_content, "\r\n--");
-		if (end_boundary == NULL) {
-			printf("Could not find end of file content\n");
-			char *res = "HTTP/1.1 400 Bad Request\r\n\r\n";
-			send(fd, res, strlen(res), 0);
-			return;
-		}
+    // Construct the full file path
+    char filepath[1024];
+    // snprintf(filepath, sizeof(filepath), "%s/%s", directory, filename);
 
-		size_t content_length = end_boundary - file_content;
+    // Open the file for writing
+    FILE *fp = fopen(filepath, "wb");
+    if (!fp) {
+        printf("Could not open file for writing\n");
+        char *res = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+        send(fd, res, strlen(res), 0);
+        return;
+    }
 
-		// Open the file in write binary mode
-		FILE *fp = fopen(filename, "wb");
-		if (!fp)
-		{
-			printf("File could not be opened\n");
-			char *res = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-			send(fd, res, strlen(res), 0);
-			return;
-		}
+    // Write the contents
+    if (fwrite(body, 1, content_length, fp) != content_length) {
+        printf("Error writing file contents\n");
+        fclose(fp);
+        char *res = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+        send(fd, res, strlen(res), 0);
+        return;
+    }
 
-		// Write the contents
-		if (fwrite(file_content, 1, content_length, fp) != content_length)
-		{
-			printf("Error writing the data\n");
-			fclose(fp);
-			char *res = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-			send(fd, res, strlen(res), 0);
-			return;
-		}
+    fclose(fp);
 
-		fclose(fp);
-
-		// Return response
-		char response[1024];
-		sprintf(response, "HTTP/1.1 201 Created\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n");
-		send(fd, response, strlen(response), 0);
+    // Send 201 Created response
+    char *response = "HTTP/1.1 201 Created\r\n\r\n";
+    send(fd, response, strlen(response), 0);
 }
 	else{
 		char response[] = "HTTP/1.1 404 Not Found\r\n\r\n";
