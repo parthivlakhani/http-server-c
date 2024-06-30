@@ -90,20 +90,21 @@ int main(int argc, char **argv) {
 
 void handle_connection(int fd){
 	char req_buffer[1024];
+	int bytesReceived = recv(fd, req_buffer, sizeof(req_buffer), 0);
 	
-	if (recv(fd, req_buffer, 1024, 0) < 0) {
+	if (bytesReceived == -1) {
     	printf("Read failed: %s \n", strerror(errno));
     	return;
   	}	
-	else{
-    	printf("Request from client: %s\n", req_buffer);
-  	}
+	
 	char *method = strdup(req_buffer);
 	char *content = strdup(req_buffer);
 	printf("Content: %s\n", content);
 	method = strtok(method, " ");
 	char *reqpath = strtok(req_buffer, " ");
 	reqpath = strtok(NULL, " ");
+
+	int byteSent;
 
 	if(strcmp(reqpath, "/")==0){
 		char *response = "HTTP/1.1 200 OK\r\n\r\n";
