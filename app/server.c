@@ -179,7 +179,8 @@ void handle_connection(int fd){
 		printf("Sending response: %s\n", response);
 		send(fd, response, strlen(response), 0);
 	}
-	else if(strncmp(reqpath, "/files/", 7)==0 && strcmp(method, "POST")==0){
+	else if (strncmp(reqpath, "/files/", 7) == 0 && strcmp(method, "POST") == 0)
+	{
 		method = strtok(NULL, "\r\n"); // HTTP 1.1
 		method = strtok(NULL, "\r\n"); // Content-Type
 		method = strtok(NULL, "\r\n"); // User-Agent
