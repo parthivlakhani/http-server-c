@@ -89,21 +89,23 @@ int main(int argc, char **argv) {
 }
 
 void handle_connection(int fd){
-	char req_buffer[1024];
+	char req_buffer[4096];
 	int bytesReceived = recv(fd, req_buffer, sizeof(req_buffer), 0);
 	
 	if (bytesReceived == -1) {
     	printf("Read failed: %s \n", strerror(errno));
     	return;
   	}	
-	
-	char *method = strdup(req_buffer);
-	char *content = strdup(req_buffer);
-	printf("Content: %s\n", content);
-	method = strtok(method, " ");
-	char *reqpath = strtok(req_buffer, " ");
-	reqpath = strtok(NULL, " ");
+	req_buffer[bytesReceived] = '\0';
 
+	// char *method = strdup(req_buffer);
+	// char *content = strdup(req_buffer);
+	// printf("Content: %s\n", content);
+	// method = strtok(method, " ");
+	// char *reqpath = strtok(req_buffer, " ");
+	// reqpath = strtok(NULL, " ");
+	char *method = strtok(req_buffer, " ");
+    char *reqpath = strtok(NULL, " ");
 	int byteSent;
 
 	if(strcmp(reqpath, "/")==0){
