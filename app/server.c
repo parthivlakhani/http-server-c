@@ -10,7 +10,7 @@
 
 #define PORT 4221
 
-void handle_connection(int fd,char directory);
+void handle_connection(int fd, char *directory);
 
 int main(int argc, char **argv) { // argc - stores number of command line arguments, argv - array of character pointers listing all arguments  
 
@@ -107,7 +107,7 @@ int main(int argc, char **argv) { // argc - stores number of command line argume
 	return 0;
 }
 
-void handle_connection(int fd, char directory){
+void handle_connection(int fd, char *directory){
 
 	char req_buffer[4096]; // hold incoming request
 	int bytesReceived = recv(fd, req_buffer, sizeof(req_buffer), 0); // receives data on the fd socket and store in req_buffer 
@@ -238,6 +238,7 @@ void handle_connection(int fd, char directory){
     // Construct the full file path
     char filepath[1024];
     snprintf(filepath, sizeof(filepath), "%s/%s", directory, filename);
+    printf("Attempting to create file: %s\n", filepath);
 
     // Open the file for writing
     FILE *fp = fopen(filepath, "wb");
@@ -248,20 +249,28 @@ void handle_connection(int fd, char directory){
         return;
     }
 
+    printf("File opened successfully\n");
+
     // Write the contents
-    if (fwrite(body, 1, content_length, fp) != content_length) {
-        printf("Error writing file contents: %s\n", strerror(errno));
+    size_t written = fwrite(body, 1, content_length, fp);
+    if (written != content_length) {
+        printf("Error writing file contents: %s (wrote %zu of %d bytes)\n", strerror(errno), written, content_length);
         fclose(fp);
         char *res = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
         send(fd, res, strlen(res), 0);
         return;
     }
 
+    printf("File contents written successfully\n");
+
     fclose(fp);
 
-    // Send 201 Created response
+   // Send 201 Created response
     char *response = "HTTP/1.1 201 Created\r\n\r\n";
     send(fd, response, strlen(response), 0);
+    
+    // Add this line to print the response for debugging
+    printf("Sent response: %s\n", response);
 }
 	else{
 		char response[] = "HTTP/1.1 404 Not Found\r\n\r\n";
