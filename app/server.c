@@ -100,6 +100,7 @@ void handle_connection(int fd){
   	}
 	char *method = strdup(req_buffer);
 	char *content = strdup(req_buffer);
+	printf("Content: %s\n", content);
 	method = strtok(method, " ");
 	char *reqpath = strtok(req_buffer, " ");
 	reqpath = strtok(NULL, " ");
