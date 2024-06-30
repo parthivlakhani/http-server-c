@@ -6,6 +6,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #define PORT 4221
 
@@ -234,6 +235,18 @@ void handle_connection(int fd){
     }
     body += 4; // Skip "\r\n\r\n"
 
+    // Ensure the directory exists
+    struct stat st = {0};
+    // if (stat(directory, &st) == -1) {
+    //     printf("Directory does not exist. Attempting to create it.\n");
+    //     if (mkdir(directory, 0700) == -1) {
+    //         printf("Failed to create directory: %s\n", strerror(errno));
+    //         char *res = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+    //         send(fd, res, strlen(res), 0);
+    //         return;
+    //     }
+    // }
+
     // Construct the full file path
     char filepath[1024];
     // snprintf(filepath, sizeof(filepath), "%s/%s", directory, filename);
@@ -241,7 +254,7 @@ void handle_connection(int fd){
     // Open the file for writing
     FILE *fp = fopen(filepath, "wb");
     if (!fp) {
-        printf("Could not open file for writing\n");
+        printf("Could not open file for writing: %s\n", strerror(errno));
         char *res = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
         send(fd, res, strlen(res), 0);
         return;
@@ -249,7 +262,7 @@ void handle_connection(int fd){
 
     // Write the contents
     if (fwrite(body, 1, content_length, fp) != content_length) {
-        printf("Error writing file contents\n");
+        printf("Error writing file contents: %s\n", strerror(errno));
         fclose(fp);
         char *res = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
         send(fd, res, strlen(res), 0);
