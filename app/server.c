@@ -10,7 +10,7 @@
 
 #define PORT 4221
 
-void handle_connection(int fd);
+void handle_connection(int fd,char directory);
 
 int main(int argc, char **argv) { // argc - stores number of command line arguments, argv - array of character pointers listing all arguments  
 
@@ -97,7 +97,7 @@ int main(int argc, char **argv) { // argc - stores number of command line argume
 		if (!fork())
 		{
 			close(server_fd); // close the server socket in clild process 
-			handle_connection(fd); // handle the client connection
+			handle_connection(fd,directory); // handle the client connection
 			close(fd); // close the client connection
 			exit(0); // exit child process
 		}
@@ -107,7 +107,7 @@ int main(int argc, char **argv) { // argc - stores number of command line argume
 	return 0;
 }
 
-void handle_connection(int fd){
+void handle_connection(int fd, char directory){
 
 	char req_buffer[4096]; // hold incoming request
 	int bytesReceived = recv(fd, req_buffer, sizeof(req_buffer), 0); // receives data on the fd socket and store in req_buffer 
@@ -235,21 +235,9 @@ void handle_connection(int fd){
     }
     body += 4; // Skip "\r\n\r\n"
 
-    // Ensure the directory exists
-    struct stat st = {0};
-    // if (stat(directory, &st) == -1) {
-    //     printf("Directory does not exist. Attempting to create it.\n");
-    //     if (mkdir(directory, 0700) == -1) {
-    //         printf("Failed to create directory: %s\n", strerror(errno));
-    //         char *res = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-    //         send(fd, res, strlen(res), 0);
-    //         return;
-    //     }
-    // }
-
     // Construct the full file path
     char filepath[1024];
-    // snprintf(filepath, sizeof(filepath), "%s/%s", directory, filename);
+    snprintf(filepath, sizeof(filepath), "%s/%s", directory, filename);
 
     // Open the file for writing
     FILE *fp = fopen(filepath, "wb");
