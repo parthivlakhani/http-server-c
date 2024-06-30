@@ -237,7 +237,7 @@ void handle_connection(int fd){
 
 		// Return contents
 		// Return contents
-		char response[];
+		char *response;
 		sprintf(response, "HTTP/1.1 201 Created\r\nContent-Type: application/octet-stream\r\nContent-Length: %d\r\n\r\n%s", contentLength, content);
 		printf("Sending response: %s\n", response);
 		send(fd, response, strlen(response), 0);
